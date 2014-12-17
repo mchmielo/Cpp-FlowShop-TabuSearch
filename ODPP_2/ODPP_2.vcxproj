@@ -64,7 +64,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="flow_shop.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="tabu_search.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="flow_shop.h" />
+    <ClInclude Include="tabu_search.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
