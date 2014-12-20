@@ -21,6 +21,7 @@ flow_shop::flow_shop()
 	cPathColor = NULL;
 	cPathIndexes = NULL;
 	mFirstPos = NULL;
+	mCount = NULL; 
 	n = 0;
 	m = 0;
 	z = 0;
@@ -84,6 +85,10 @@ void flow_shop::clearFlowShop(){
 		delete mFirstPos;
 		mFirstPos = NULL;
 	}
+	if (mCount != NULL){
+		delete mCount;
+		mCount = NULL;
+	}
 	s = 0;
 	n = 0;
 	m = 0;
@@ -130,6 +135,7 @@ void flow_shop::logClass()
 
 bool flow_shop::readFile(const std::string &file){
 	fstream inFile;
+	int machine = 0;
 	inFile.open(file.c_str(), ios::in);
 	if (!inFile.is_open()){
 		return false;
@@ -139,8 +145,9 @@ bool flow_shop::readFile(const std::string &file){
 
 	inFile >> this->z;      // wczytanie liczby zadan
 	inFile >> this->s;      // wczytanie liczby stanowisk
-	createPi(); //do modyfikacji            // zaalokowanie pamieci na podstawie liczby zadan i maszyn
+	createPi();				// zaalokowanie pamieci na podstawie liczby zadan i maszyn
 	logClass();
+	mFirstPos[machine++] = 1;
 	while (!inFile.eof()){
 		oper = row + i*this->s;	// obliczenie numeru obecnej operacji
 		inFile >> czasi[oper];	// wczytanie czasu wykonywania obecnej operacji
@@ -150,6 +157,8 @@ bool flow_shop::readFile(const std::string &file){
 		i++;
 		
 		if (i == this->z){			// wyzerowanie licznika zadan po przekroczeniu row*z
+			mFirstPos[machine++] = currPos + 1;
+			mFirstPos[machine++] = currPos + 2;
 			i = 0;
 			row++;						// zwiekszenie licznika wierszy
 			currPos += 2;		// zwiêkszenie wskaŸnika obecnej pozycji
@@ -175,6 +184,7 @@ void flow_shop::createPi()
 	this->T = new int[this->n + 1];
 	this->ph = new int[this->n + 1];
 	this->mFirstPos = new int[this->m];
+	this->mCount = new int[this->m];
 	for (int i = 0; i < this->n + this->m + 1; ++i){
 		this->pi[i] = 0;
 	}
@@ -184,6 +194,13 @@ void flow_shop::createPi()
 		this->ci[i] = 0;
 		this->T[i] = 0;
 		this->ph[i] = 0;
+	}
+	for (int i = 0; i < this->m; ++i){
+		if (i % 2 == 0){
+			this->mCount[i] = this->z;
+		}
+		else
+			this->mCount[i] = 0;
 	}
 	this->ps[0] = 0;
 	this->czasi[0] = 0;
@@ -203,6 +220,9 @@ void flow_shop::makeTi()
 
 void flow_shop::makeLp()
 {
+	for (int i = 0; i <= this->n; ++i){
+		this->lp[i] = 0;
+	}
 	int indexes = -1;						// indeksy ktore nalezy w kolejnej petli inkrementowac
 	for (int i = this->n; i > 0; --i){		// iteracja od tylu po nastêpnikach technologicznych
 		/* nastêpniki technologiczne */
@@ -269,6 +289,10 @@ int flow_shop::findMaxCi(){
 	}
 	cMax = max;
 	return max_i;
+}
+
+int flow_shop::getCmax(){
+	return this->cMax;
 }
 
 void flow_shop::createCPath(){
@@ -338,39 +362,114 @@ void flow_shop::createBlocks(){
 }
 
 void flow_shop::swapPosInPi(int fromIndex, int toIndex){		//
-	int from;
+	int from, fromMachine, toMachine;
 	from = pi[fromIndex];
+	fromMachine = findMachine(fromIndex)-1;
+	toMachine = findMachine(toIndex)-1;
+	
 	if (fromIndex < toIndex){
 		for (int i = fromIndex; i < toIndex; ++i){
 			pi[i] = pi[i + 1];
 			ps[pi[i]] = i;
 		}
+		if (fromMachine < toMachine){		// jeœli przeniesiono na druga maszyne
+			mCount[fromMachine]--;			// zmniejsz stan na pierwszej
+			mCount[toMachine]++;			// zwieksz stan na drugiej
+			if (mCount[toMachine] > 1){			// jesli przesunal siê poczatek drugiej maszyny
+				mFirstPos[toMachine]--;			// to trzeba go przesunac
+			}
+		}
+		
 	}
 	else{
 		for (int i = fromIndex; i > toIndex; --i){
 			pi[i] = pi[i - 1];
 			ps[pi[i]] = i;
 		}
+		if (fromMachine > toMachine){		// jeœli przeniesiono na druga maszyne
+			mCount[fromMachine]--;			// zmniejsz stan na pierwszej
+			mCount[toMachine]++;			// zwieksz stan na drugiej
+			if (mCount[fromMachine] >= 1){			// jesli przesunal siê poczatek drugiej maszyny
+				mFirstPos[fromMachine]++;			// to trzeba go przesunac
+			}
+		}
+		
 	}
 	pi[toIndex] = from;
 	ps[from] = toIndex;
 }
 
-int flow_shop::findWorkspace(int operation){
+int flow_shop::findMachine(int index){
 	int workspaceNumber = 0;
-	workspaceNumber =  static_cast<int>(ps[operation]/(this->z+3));
-	return workspaceNumber;
+	workspaceNumber =  static_cast<int>((index-1)/(this->z+2)) + 1;
+
+	// pierwsza maszyna stanowiska
+	if (index >= mFirstPos[workspaceNumber * 2 - 2]-1 && index < mFirstPos[workspaceNumber * 2 - 1]-1){
+		return (workspaceNumber * 2 - 1);
+	}
+	// druga maszyna stanowiska
+	return (workspaceNumber * 2);
 }
 
-void flow_shop::findAllPossibleSwaps(){
-	int wrkspc = 0;
+void flow_shop::findAllPossibleSwaps(std::queue<pair<int, int> > &possibleSwaps){
+	int machine = 0, prevMachine = -1, blockBegin = -1, blockEnd = -1;
+	int index;
 	if (!possibleSwaps.empty()){			// czyszczenie kolejki
 		std::queue<pair<int, int> > empty;
 		std::swap(possibleSwaps, empty);
 	}
 	for (int i = 0; i < cPath[0]; ++i){
 		if (cPathColor[i] != 0){			// tylko bloki
-			wrkspc = findWorkspace(cPath[i + 2]);
+			if (cPathColor[i] == 1){
+				int iter = i+1;
+				blockBegin = ps[cPath[i + 2]];		// indeks poczatku bloku na tej maszynie
+													// znalezienie indeksu konca bloku na tej maszynie
+				while (cPathColor[iter] != -1){
+					iter++;
+				}
+				blockEnd = blockBegin + iter - i;
+			}
+
+			machine = findMachine(ps[cPath[i + 2]]);
+			
+			switch (cPathColor[i]){
+			case 1:						// jesli poczatek bloku to za blok
+				index = blockEnd;
+				while (pi[index] != 0){
+					possibleSwaps.push(make_pair(ps[cPath[i + 2]], index++));
+				}
+				break;
+			case 2:						// jesli srodek bloku to przed blok i za blok
+				index = mFirstPos[machine - 1];
+				while (index <= blockBegin){
+					possibleSwaps.push(make_pair(ps[cPath[i + 2]], index++));
+				}
+				index = blockEnd;
+				while (pi[index] != 0){
+					possibleSwaps.push(make_pair(ps[cPath[i + 2]], index++));
+				}
+				break;
+			case -1:					// jesli koniec bloku to przed blok
+				index = mFirstPos[machine - 1];
+				while (index <= blockBegin){
+					possibleSwaps.push(make_pair(ps[cPath[i + 2]], index++));
+				}
+				break;
+			}
+
+			// dostêpne pozycje na drugiej maszynie - jeœli na nieparzyst¹ to za 0, na parzyst¹ to na 0
+			if (machine % 2 == 0){
+				index = mFirstPos[machine - 2];
+				do{
+					possibleSwaps.push(make_pair(ps[cPath[i + 2]], index));
+				} while (pi[index++] != 0);
+			}
+			else{
+				index = mFirstPos[machine] - 1;
+				do{
+					possibleSwaps.push(make_pair(ps[cPath[i + 2]], index++));
+				} while (pi[index] != 0);
+			}
 		}
 	}
 }
@@ -455,7 +554,7 @@ void flow_shop::createHTMLFile(const std::string &file){
 				else{
 					outFile << "<div class='job'";
 				}
-				outFile << " style='left:" << ci[pi[index]] - czasi[pi[index]] << "px; background: #" << colors[tmp] << "; width:" << czasi[pi[index]] << "px'>" << pi[index] << "</div>\n";
+				outFile << " style='left:" << ci[pi[index]] - czasi[pi[index]] << "px; background: #" << colors[tmp] << "; width:" << czasi[pi[index]] << "px'>" << pi[index] << "<br>" << index << "</div>\n";
 				index++;
 			}
 			outFile << "</div>\n";
@@ -466,6 +565,12 @@ void flow_shop::createHTMLFile(const std::string &file){
 	outFile << "<div class='xaxis'>";
 	for (int i = 0; i < static_cast<int>(cMax / 100); ++i){
 		outFile << "<div style='left:" << i*100 <<"px'>" << i*100 << "</div>\n";
+	}
+	outFile << "</div><div style='white-space:pre'><br>pi:<br> " << endl;
+	for (int j = 0; j < this->n + this->m + 1; ++j){
+		if (j % (this->z + 2) == 0)
+			outFile << this->pi[j] << "<br>" << endl;
+		else outFile << this->pi[j] << "\t";
 	}
 	outFile << "</div>\n</body>\n</html>\n";
 	outFile.close();

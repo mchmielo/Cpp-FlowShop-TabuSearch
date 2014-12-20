@@ -21,7 +21,8 @@ private:
 	int *cPathColor;	/** tablica zapamiêtuj¹ca pocz¹tek i koniec bloku: -1 pocz¹tek bloku, 1 koniec bloku */
 	int *cPathIndexes;	/** tablica zapamiêtuje indeksy pocz¹tku i koñca bloku*/
 	int *mFirstPos;		/** tablica zapamiêtuje indeksy pierwszych pozycji na maszynach*/
-	std::queue < std::pair <int, int> > possibleSwaps; /** kolejka wszystkich mozliwych przestawien [sk¹d][dok¹d]*/
+	int *mCount;		/** tablica pamiêta ile operacji jest na danej maszynie*/
+//	std::queue < std::pair <int, int> > possibleSwaps; /** kolejka wszystkich mozliwych przestawien [sk¹d][dok¹d]*/
 	int blockSwaps;
 	int cMax;
 public:
@@ -78,8 +79,8 @@ public:
 	void createCPath();
 	void createBlocks();
 	void swapPosInPi(int from, int to);
-	int findWorkspace(int);
-	void findAllPossibleSwaps();
+	int findMachine(int);
+	void findAllPossibleSwaps(std::queue<std::pair<int,int> > &);
 	void swapBlocks();
 	void copyPermutation(const flow_shop&);
 

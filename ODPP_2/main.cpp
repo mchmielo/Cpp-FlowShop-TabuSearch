@@ -53,6 +53,7 @@ int main()
 
 				ts.getCurrPermutation().readFile(fName);
 				ts.preparePermutation();
+				ts.mainAlgorith();
 				ts.getCurrPermutation().createHTMLFile(fileNames[i]+string(".html"));
 				ts.getCurrPermutation().logClass();
 				//ts.mainAlgorithm();
