@@ -75,6 +75,7 @@ public:
 	* \brief Metoda tworz¹ca harmonogram dla danej permutacji.
 	*/
 	void createSchedule();
+	void splitFirstPermutation();
 	int findMaxCi();
 	void createCPath();
 	void createBlocks();

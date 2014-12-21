@@ -54,8 +54,7 @@ int main()
 				ts.getCurrPermutation().readFile(fName);
 				ts.preparePermutation();
 				ts.mainAlgorith();
-				ts.getCurrPermutation().createHTMLFile(fileNames[i]+string(".html"));
-				ts.getCurrPermutation().logClass();
+				ts.getBestPermutation().createHTMLFile(fileNames[i]+string(".html"));
 				//ts.mainAlgorithm();
 
 				QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*> (&counterStop));	// koniec pomiaru czasu

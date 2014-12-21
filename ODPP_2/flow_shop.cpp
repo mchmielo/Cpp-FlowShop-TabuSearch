@@ -146,7 +146,6 @@ bool flow_shop::readFile(const std::string &file){
 	inFile >> this->z;      // wczytanie liczby zadan
 	inFile >> this->s;      // wczytanie liczby stanowisk
 	createPi();				// zaalokowanie pamieci na podstawie liczby zadan i maszyn
-	logClass();
 	mFirstPos[machine++] = 1;
 	while (!inFile.eof()){
 		oper = row + i*this->s;	// obliczenie numeru obecnej operacji
@@ -164,12 +163,25 @@ bool flow_shop::readFile(const std::string &file){
 			currPos += 2;		// zwiêkszenie wskaŸnika obecnej pozycji
 		}
 	}
+	splitFirstPermutation();
 	inFile.close();
 	makeTi();
 	makeLp();
 	return true;
 }
 
+void flow_shop::splitFirstPermutation(){
+	int machine = 0, index1, index2;
+	for (int i = 0; i < this->s; ++i){
+		machine = 2 * i;		// 0, 2, 4	- pierwsze maszyny na stanowisku
+		index1 = mFirstPos[machine];
+		index2 = mFirstPos[machine + 1];
+		while (pi[index1] != 0){
+			swapPosInPi(index1, index2);
+			index1++;
+		}
+	}
+}
 
 void flow_shop::createPi()
 {
@@ -366,7 +378,9 @@ void flow_shop::swapPosInPi(int fromIndex, int toIndex){		//
 	from = pi[fromIndex];
 	fromMachine = findMachine(fromIndex)-1;
 	toMachine = findMachine(toIndex)-1;
-	
+	if (pi[toIndex] == 0 && fromIndex < toIndex && fromMachine == toMachine)
+		toMachine++;
+
 	if (fromIndex < toIndex){
 		for (int i = fromIndex; i < toIndex; ++i){
 			pi[i] = pi[i + 1];
@@ -500,6 +514,52 @@ void flow_shop::swapBlocks(){
 	makeLp();
 }
 
+void flow_shop::copyPermutation(const flow_shop &p){
+	this->clearFlowShop();
+	
+	this->n = p.n;
+	this->z = p.z;
+	this->s = p.s;
+	this->m = p.m;
+	this->cMax = p.cMax;
+
+	this->pi = new int[this->n + this->m + 1];	//
+	this->ti = new int[this->n + 1];			//
+	this->ps = new int[this->n + 1];			//
+	this->czasi = new int[this->n + 1];			//
+	this->lp = new int[this->n + 1];
+	this->ci = new int[this->n + 1];
+	this->T = new int[this->n + 1];				//
+	this->ph = new int[this->n + 1];			
+	this->mFirstPos = new int[this->m];
+	this->mCount = new int[this->m];
+	this->cPath = new int[p.cPath[0]];
+	this->cPathColor = new int[p.cPath[0] - 2];
+
+	for (int i = 0; i < this->n + this->m + 1; ++i){
+		this->pi[i] = p.pi[i];
+	}
+	for (int i = 0; i <= this->n; ++i){
+		this->czasi[i] = p.czasi[i];
+		this->ti[i] = p.ti[i];
+		this->ps[i] = p.ps[i];
+		this->lp[i] = p.lp[i];
+		this->ci[i] = p.ci[i];
+		this->ph[i] = p.ph[i];
+		this->T[i] = p.T[i];
+	}
+	for (int i = 0; i < this->m; ++i){
+		this->mFirstPos[i] = p.mFirstPos[i];
+		this->mCount[i] = p.mCount[i];
+	}
+	for (int i = 0; i < p.cPath[0]; ++i){
+		this->cPath[i] = p.cPath[i];
+	}
+	for (int i = 0; i < p.cPath[0]-2; ++i){
+		this->cPathColor[i] = p.cPathColor[i];
+	}
+}
+
 bool flow_shop::isInCPath(int index){
 	for (int i = 0; i < cPath[0]; ++i){
 		if (index == cPath[i + 2])
@@ -575,6 +635,6 @@ void flow_shop::createHTMLFile(const std::string &file){
 			outFile << this->pi[j] << "<br>" << endl;
 		else outFile << this->pi[j] << "\t";
 	}
-	outFile << "</div>\n</body>\n</html>\n";
+	outFile << "</div>\n"<< "<br>Cmax: " << cMax <<"</body>\n</html>\n";
 	outFile.close();
 }

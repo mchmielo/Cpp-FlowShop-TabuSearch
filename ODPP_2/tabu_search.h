@@ -1,13 +1,13 @@
 #pragma once
 #include "flow_shop.h"
 #include <queue>
-#define MAX_ITERATIONS 1000
-#define TABU_SIZE 14
+#define MAX_ITERATIONS 500
+#define TABU_SIZE 10
 
 class tabu_search
 {
 private:
-	flow_shop prevPermutation;
+	flow_shop bestPermutation;
 	flow_shop currPermutation;
 	std::queue<std::pair<int, int> > possibleSwaps;
 	int bestCmax;
@@ -18,6 +18,7 @@ public:
 	bool compareCmaxes(int, int);
 	int getBestCmax();
 	flow_shop &getCurrPermutation();
+	flow_shop &getBestPermutation();
 	bool onTabuList(const std::pair<int, int> &);
 	void preparePermutation();
 	void mainAlgorith();

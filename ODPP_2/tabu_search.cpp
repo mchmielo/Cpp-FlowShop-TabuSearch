@@ -13,19 +13,15 @@ tabu_search::~tabu_search()
 {
 }
 
-/*bool tabu_search::compareCmaxes(int prevCmax, int currCmax){
-	double rnd = static_cast<double>(rand() % 100);
-	if ((currCmax >= prevCmax) || (rnd / 100.0 < (exp(-(currCmax - prevCmax)) / currTemp)))
-		return true;
-	return false;
-}*/
-
 int tabu_search::getBestCmax(){
 	return bestCmax;
 }
 
 flow_shop &tabu_search::getCurrPermutation(){
 	return currPermutation;
+}
+flow_shop &tabu_search::getBestPermutation(){
+	return bestPermutation;
 }
 
 bool tabu_search::onTabuList(const std::pair<int, int> &currPair){
@@ -39,6 +35,7 @@ bool tabu_search::onTabuList(const std::pair<int, int> &currPair){
 	return false;
 }
 
+
 void tabu_search::preparePermutation(){
 	
 	currPermutation.createSchedule();
@@ -50,13 +47,12 @@ void tabu_search::preparePermutation(){
 void tabu_search::mainAlgorith(){
 	std::pair<int, int> currPair, bestPair;
 	std::vector<std::pair<int, int> >::iterator iter;
+	preparePermutation();
 	for (int i = 0; i < MAX_ITERATIONS; ++i){
 		bestPair = std::make_pair(0, 0);
 		int localCmax = std::numeric_limits<int>::max();
-		currPermutation.makeLp();
-		preparePermutation();
-		currPermutation.createHTMLFile(std::string("tmp") + std::to_string(i) + std::string(".html"));
-		currPermutation.createHTMLFile(std::string("tmp.html"));
+//		currPermutation.createHTMLFile(std::string("tmp") + std::to_string(i) + std::string(".html"));
+//		currPermutation.createHTMLFile(std::string("tmp.html"));
 		while (!possibleSwaps.empty()){			// sprawdzenie lokalnego cmaxu dla ka¿dego mozliwego ruchu
 			currPair = possibleSwaps.front();	// zdjecie pary z kolejki
 			possibleSwaps.pop();
@@ -74,18 +70,34 @@ void tabu_search::mainAlgorith(){
 				currPermutation.makeLp();
 				currPermutation.createSchedule();								// obliczenie wszystkich ci
 			}
+			else{
+				currPermutation.swapPosInPi(currPair.first, currPair.second);	// zamiana pozycji
+				currPermutation.makeLp();
+				currPermutation.createSchedule();								// obliczenie wszystkich ci
+
+				currPermutation.findMaxCi();
+				if (currPermutation.getCmax() < bestCmax){						// zapamietanie najlepszego ruchu i cmaxu
+					bestCmax = currPermutation.getCmax();
+					bestPermutation.copyPermutation(currPermutation);
+					localCmax = currPermutation.getCmax();
+					bestPair = currPair;
+				}
+				currPermutation.swapPosInPi(currPair.second, currPair.first);	// przywrócenie permutacji wstêpnej
+				currPermutation.makeLp();
+				currPermutation.createSchedule();								// obliczenie wszystkich ci
+			}
 
 		}
-		if (localCmax <= bestCmax){
-			bestCmax = localCmax;
-			iter = tabuList.begin();
-			tabuList.insert(iter, bestPair);
+		currPermutation.swapPosInPi(bestPair.first, bestPair.second);
+		currPermutation.makeLp();
+		preparePermutation();
+		iter = tabuList.begin();
+		tabuList.insert(iter, bestPair);
+		if (tabuList.size() >= TABU_SIZE)
 			tabuList.pop_back();
-			currPermutation.swapPosInPi(bestPair.first, bestPair.second);
-		}
-		else{
-			if (!tabuList.empty())
-				tabuList.pop_back();
+		if (localCmax < bestCmax){
+			bestCmax = localCmax;
+			bestPermutation.copyPermutation(currPermutation);
 		}
 		
 	}
