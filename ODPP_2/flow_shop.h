@@ -19,7 +19,7 @@ private:
 	int *ph;	/** tablica pomocnicza w wyznaczaniu œcie¿ki krytycznej*/
 	int *cPath;	/** œcie¿ka krytyczna: [liczba_elementow 0 1.element 2.element ... i.element 0]*/
 	int *cPathColor;	/** tablica zapamiêtuj¹ca pocz¹tek i koniec bloku: -1 pocz¹tek bloku, 1 koniec bloku */
-	int *cPathIndexes;	/** tablica zapamiêtuje indeksy pocz¹tku i koñca bloku*/
+
 	int *mFirstPos;		/** tablica zapamiêtuje indeksy pierwszych pozycji na maszynach*/
 	int *mCount;		/** tablica pamiêta ile operacji jest na danej maszynie*/
 //	std::queue < std::pair <int, int> > possibleSwaps; /** kolejka wszystkich mozliwych przestawien [sk¹d][dok¹d]*/
@@ -82,7 +82,6 @@ public:
 	void swapPosInPi(int from, int to);
 	int findMachine(int);
 	void findAllPossibleSwaps(std::queue<std::pair<int,int> > &);
-	void swapBlocks();
 	void copyPermutation(const flow_shop&);
 
 	int getCmax();

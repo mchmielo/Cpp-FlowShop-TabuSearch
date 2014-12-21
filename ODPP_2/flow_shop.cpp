@@ -19,7 +19,6 @@ flow_shop::flow_shop()
 	ph = NULL;
 	cPath = NULL;
 	cPathColor = NULL;
-	cPathIndexes = NULL;
 	mFirstPos = NULL;
 	mCount = NULL; 
 	n = 0;
@@ -77,10 +76,6 @@ void flow_shop::clearFlowShop(){
 		delete cPathColor;
 		cPathColor = NULL;
 	}
-	if (cPathIndexes != NULL){
-		delete cPathIndexes;
-		cPathIndexes = NULL;
-	}
 	if (mFirstPos != NULL){
 		delete mFirstPos;
 		mFirstPos = NULL;
@@ -135,7 +130,7 @@ void flow_shop::logClass()
 
 bool flow_shop::readFile(const std::string &file){
 	fstream inFile;
-	int machine = 0;
+	unsigned int machine = 0;
 	inFile.open(file.c_str(), ios::in);
 	if (!inFile.is_open()){
 		return false;
@@ -171,7 +166,7 @@ bool flow_shop::readFile(const std::string &file){
 }
 
 void flow_shop::splitFirstPermutation(){
-	int machine = 0, index1, index2;
+	unsigned int machine = 0, index1, index2;
 	for (int i = 0; i < this->s; ++i){
 		machine = 2 * i;		// 0, 2, 4	- pierwsze maszyny na stanowisku
 		index1 = mFirstPos[machine];
@@ -374,7 +369,7 @@ void flow_shop::createBlocks(){
 }
 
 void flow_shop::swapPosInPi(int fromIndex, int toIndex){		//
-	int from, fromMachine, toMachine;
+	unsigned int from, fromMachine, toMachine;
 	from = pi[fromIndex];
 	fromMachine = findMachine(fromIndex)-1;
 	toMachine = findMachine(toIndex)-1;
@@ -426,7 +421,8 @@ int flow_shop::findMachine(int index){
 }
 
 void flow_shop::findAllPossibleSwaps(std::queue<pair<int, int> > &possibleSwaps){
-	int machine = 0, prevMachine = -1, blockBegin = -1, blockEnd = -1;
+	unsigned int machine = 0;
+	int prevMachine = -1, blockBegin = -1, blockEnd = -1;
 	int index, machineOnW = -1;
 	if (!possibleSwaps.empty()){			// czyszczenie kolejki
 		std::queue<pair<int, int> > empty;
@@ -476,7 +472,7 @@ void flow_shop::findAllPossibleSwaps(std::queue<pair<int, int> > &possibleSwaps)
 			}
 
 			// dostêpne pozycje na drugiej maszynie - jeœli na nieparzyst¹ to za 0, na parzyst¹ to na 0
-			if (machine % 2 != 0){		// jeœli maszyna druga na stanowisku
+			if (machine % 2 != 0 && machine > 0){		// jeœli maszyna druga na stanowisku
 				index = mFirstPos[machine - 1];
 				do{
 					possibleSwaps.push(make_pair(ps[cPath[i + 2]], index));
@@ -489,29 +485,6 @@ void flow_shop::findAllPossibleSwaps(std::queue<pair<int, int> > &possibleSwaps)
 				} while (pi[index] != 0);
 			}
 	}
-}
-
-void flow_shop::swapBlocks(){
-	int rnd = (rand() % blockSwaps) + 0;
-	int tmp, tmp1, tmp2;
-	tmp1 = cPath[cPathIndexes[rnd] + 2];						// losowy element do zamiany
-	tmp2 = cPath[cPathIndexes[rnd] + 2 + cPathColor[cPathIndexes[rnd]]];	// nastêpny (pocz¹tek bloku) lub poprzedni (koniec bloku) element
-	tmp = pi[ps[tmp1]];							// zamiana elementów w permutacji
-	pi[ps[tmp1]] = pi[ps[tmp2]];
-	pi[ps[tmp2]] = tmp;
-	tmp = ps[tmp1];								// zamiana elementów w ps
-	ps[tmp1] = ps[tmp2];
-	ps[tmp2] = tmp;
-	tmp = czasi[tmp1];							//zamiana czasów
-	czasi[tmp1] = czasi[tmp2];
-	czasi[tmp2] = tmp;
-	for (int i = 0; i < n + 1; ++i){			//przygotowanie pozosta³ych tabel do aktualizacji
-		ti[i] = 0;
-		T[i] = 0;
-		lp[i] = 0;
-	}
-	makeTi();
-	makeLp();
 }
 
 void flow_shop::copyPermutation(const flow_shop &p){
