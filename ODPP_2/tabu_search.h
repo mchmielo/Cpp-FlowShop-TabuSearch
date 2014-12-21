@@ -1,7 +1,7 @@
 #pragma once
 #include "flow_shop.h"
 #include <queue>
-#define MAX_ITERATIONS 50
+#define MAX_ITERATIONS 500
 #define TABU_SIZE 10
 
 class tabu_search
