@@ -157,7 +157,7 @@ bool flow_shop::readFile(const std::string &file){
 		i++;
 		
 		if (i == this->z){			// wyzerowanie licznika zadan po przekroczeniu row*z
-			mFirstPos[machine++] = currPos + 1;
+			mFirstPos[machine++] = currPos;
 			mFirstPos[machine++] = currPos + 2;
 			i = 0;
 			row++;						// zwiekszenie licznika wierszy
@@ -404,7 +404,7 @@ int flow_shop::findMachine(int index){
 	workspaceNumber =  static_cast<int>((index-1)/(this->z+2)) + 1;
 
 	// pierwsza maszyna stanowiska
-	if (index >= mFirstPos[workspaceNumber * 2 - 2]-1 && index < mFirstPos[workspaceNumber * 2 - 1]-1){
+	if (index >= mFirstPos[workspaceNumber * 2 - 2] && index < mFirstPos[workspaceNumber * 2 - 1]){
 		return (workspaceNumber * 2 - 1);
 	}
 	// druga maszyna stanowiska
@@ -413,13 +413,12 @@ int flow_shop::findMachine(int index){
 
 void flow_shop::findAllPossibleSwaps(std::queue<pair<int, int> > &possibleSwaps){
 	int machine = 0, prevMachine = -1, blockBegin = -1, blockEnd = -1;
-	int index;
+	int index, machineOnW = -1;
 	if (!possibleSwaps.empty()){			// czyszczenie kolejki
 		std::queue<pair<int, int> > empty;
 		std::swap(possibleSwaps, empty);
 	}
 	for (int i = 0; i < cPath[0]; ++i){
-		if (cPathColor[i] != 0){			// tylko bloki
 			if (cPathColor[i] == 1){
 				int iter = i+1;
 				blockBegin = ps[cPath[i + 2]];		// indeks poczatku bloku na tej maszynie
@@ -430,8 +429,13 @@ void flow_shop::findAllPossibleSwaps(std::queue<pair<int, int> > &possibleSwaps)
 				blockEnd = blockBegin + iter - i;
 			}
 
-			machine = findMachine(ps[cPath[i + 2]]);
-			
+			machine = findMachine(ps[cPath[i + 2]]) - 1;
+
+					
+				machineOnW = 0;			// maszyny 0, 2 ,4 ... (pierwsze na stanowisku - nie potrzebuja przesuwania)
+			if (machine % 2 == 0 && mCount[machine+1])		// maszyny numerowane od 0 (dlatego odwrotnie warunek)
+				machineOnW = -1;			// drugie maszyny na stanowisku potrzebuja przesuniecie o 1 w prawo
+
 			switch (cPathColor[i]){
 			case 1:						// jesli poczatek bloku to za blok
 				index = blockEnd;
@@ -440,7 +444,7 @@ void flow_shop::findAllPossibleSwaps(std::queue<pair<int, int> > &possibleSwaps)
 				}
 				break;
 			case 2:						// jesli srodek bloku to przed blok i za blok
-				index = mFirstPos[machine - 1];
+				index = mFirstPos[machine];
 				while (index <= blockBegin){
 					possibleSwaps.push(make_pair(ps[cPath[i + 2]], index++));
 				}
@@ -450,7 +454,7 @@ void flow_shop::findAllPossibleSwaps(std::queue<pair<int, int> > &possibleSwaps)
 				}
 				break;
 			case -1:					// jesli koniec bloku to przed blok
-				index = mFirstPos[machine - 1];
+				index = mFirstPos[machine];
 				while (index <= blockBegin){
 					possibleSwaps.push(make_pair(ps[cPath[i + 2]], index++));
 				}
@@ -458,19 +462,18 @@ void flow_shop::findAllPossibleSwaps(std::queue<pair<int, int> > &possibleSwaps)
 			}
 
 			// dostêpne pozycje na drugiej maszynie - jeœli na nieparzyst¹ to za 0, na parzyst¹ to na 0
-			if (machine % 2 == 0){
-				index = mFirstPos[machine - 2];
+			if (machine % 2 != 0){		// jeœli maszyna druga na stanowisku
+				index = mFirstPos[machine - 1];
 				do{
 					possibleSwaps.push(make_pair(ps[cPath[i + 2]], index));
 				} while (pi[index++] != 0);
 			}
-			else{
-				index = mFirstPos[machine] - 1;
+			else{						// jesli maszyna pierwsza na stanowisku
+				index = mFirstPos[machine + 1] + machineOnW;
 				do{
 					possibleSwaps.push(make_pair(ps[cPath[i + 2]], index++));
 				} while (pi[index] != 0);
 			}
-		}
 	}
 }
 

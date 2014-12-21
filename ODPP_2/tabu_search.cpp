@@ -66,7 +66,7 @@ void tabu_search::mainAlgorith(){
 				currPermutation.createSchedule();								// obliczenie wszystkich ci
 
 				currPermutation.findMaxCi();
-				if (localCmax > currPermutation.getCmax()){						// zapamietanie najlepszego ruchu i cmaxu
+				if (localCmax >= currPermutation.getCmax()){						// zapamietanie najlepszego ruchu i cmaxu
 					localCmax = currPermutation.getCmax();
 					bestPair = currPair;
 				}
@@ -76,7 +76,7 @@ void tabu_search::mainAlgorith(){
 			}
 
 		}
-		if (localCmax < bestCmax){
+		if (localCmax <= bestCmax){
 			bestCmax = localCmax;
 			iter = tabuList.begin();
 			tabuList.insert(iter, bestPair);
