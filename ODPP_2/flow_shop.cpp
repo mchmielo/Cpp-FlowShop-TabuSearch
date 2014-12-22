@@ -187,6 +187,7 @@ void flow_shop::createPi()
 {
 	this->m = this->s * 2;
 	this->n = this->s * this->z;
+
 	this->pi = new int[this->n + this->m + 1];
 	this->ti = new int[this->n + 1];
 	this->ps = new int[this->n + 1];
@@ -195,8 +196,9 @@ void flow_shop::createPi()
 	this->ci = new int[this->n + 1];
 	this->T = new int[this->n + 1];
 	this->ph = new int[this->n + 1];
-	this->mFirstPos = new int[this->m];
+	this->mFirstPos = new int[this->m + 1];
 	this->mCount = new int[this->m];
+
 	for (int i = 0; i < this->n + this->m + 1; ++i){
 		this->pi[i] = 0;
 	}
@@ -522,6 +524,7 @@ void flow_shop::copyPermutation(const flow_shop &p){
 	this->s = p.s;
 	this->m = p.m;
 	this->cMax = p.cMax;
+	this->blockSwaps = p.blockSwaps;
 
 	this->pi = new int[this->n + this->m + 1];	//
 	this->ti = new int[this->n + 1];			//
@@ -531,8 +534,9 @@ void flow_shop::copyPermutation(const flow_shop &p){
 	this->ci = new int[this->n + 1];
 	this->T = new int[this->n + 1];				//
 	this->ph = new int[this->n + 1];			
-	this->mFirstPos = new int[this->m];
+	this->mFirstPos = new int[this->m + 1];
 	this->mCount = new int[this->m];
+
 	this->cPath = new int[p.cPath[0]];
 	this->cPathColor = new int[p.cPath[0] - 2];
 

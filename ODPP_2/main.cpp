@@ -48,7 +48,7 @@ int main()
 				fName += fileNames[i];
 				QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*> (&freq));
 				QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*> (&counterStart));	// wystartowanie pomiaru czasu
-
+				ts.getBestPermutation().clearFlowShop();
 				ts.getCurrPermutation().clearFlowShop();
 
 				ts.getCurrPermutation().readFile(fName);
