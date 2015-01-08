@@ -1,8 +1,17 @@
 #pragma once
 #include "flow_shop.h"
 #include <queue>
-#define MAX_ITERATIONS 200
-#define TABU_SIZE 10
+
+#ifdef _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
+#define new DEBUG_NEW
+#endif
+
+#define MAX_ITERATIONS 300
+#define TABU_SIZE 14
 
 class tabu_search
 {
@@ -21,6 +30,6 @@ public:
 	flow_shop &getBestPermutation();
 	bool onTabuList(const std::pair<int, int> &);
 	void preparePermutation();
-	void mainAlgorith();
+	void mainAlgorithm();
 };
 

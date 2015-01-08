@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
@@ -6,6 +7,15 @@
 #include <fstream>
 #include <Windows.h>
 #include "tabu_search.h"
+
+
+#ifdef _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
+#define new DEBUG_NEW
+#endif
 
 using namespace std;
 
@@ -37,7 +47,7 @@ int main()
 
 	unsigned __int64 freq, counterStart, counterStop;	// zmienne do mierzenia czasu dzialania 
 	long double timer;
-
+	cout << "Liczba iteracji: " << MAX_ITERATIONS << ", rozmiar listy tabu: " << TABU_SIZE << endl << endl;
 	srand(static_cast<unsigned int>(time(NULL)));
 	vector<string> fileNames = readFileNames("Data/names.txt");
 	if (!fileNames.empty()){
@@ -53,7 +63,7 @@ int main()
 
 				ts.getCurrPermutation().readFile(fName);
 				ts.preparePermutation();
-				ts.mainAlgorith();
+				ts.mainAlgorithm();
 				ts.getBestPermutation().createHTMLFile(fileNames[i]+string(".html"));
 				//ts.mainAlgorithm();
 
@@ -64,6 +74,7 @@ int main()
 		}
 	}
 	system("pause");
+	_CrtDumpMemoryLeaks();
 	return 0;
 }
 

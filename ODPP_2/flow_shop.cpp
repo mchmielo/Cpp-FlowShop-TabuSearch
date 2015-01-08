@@ -5,6 +5,14 @@
 #include <math.h>
 #include <iomanip>
 
+#ifdef _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
+#define new DEBUG_NEW
+#endif
+
 using namespace std;
 
 flow_shop::flow_shop()
@@ -163,7 +171,7 @@ bool flow_shop::readFile(const std::string &file){
 			currPos += 2;		// zwiêkszenie wskaŸnika obecnej pozycji
 		}
 	}
-	splitFirstPermutation();
+//	splitFirstPermutation();
 	inFile.close();
 	makeTi();
 	makeLp();
@@ -537,8 +545,8 @@ void flow_shop::copyPermutation(const flow_shop &p){
 	this->mFirstPos = new int[this->m + 1];
 	this->mCount = new int[this->m];
 
-	this->cPath = new int[p.cPath[0]];
-	this->cPathColor = new int[p.cPath[0] - 2];
+	this->cPath = new int[p.cPath[0] + 4];
+	this->cPathColor = new int[p.cPath[0]];
 
 	for (int i = 0; i < this->n + this->m + 1; ++i){
 		this->pi[i] = p.pi[i];
@@ -556,10 +564,10 @@ void flow_shop::copyPermutation(const flow_shop &p){
 		this->mFirstPos[i] = p.mFirstPos[i];
 		this->mCount[i] = p.mCount[i];
 	}
-	for (int i = 0; i < p.cPath[0]; ++i){
+	for (int i = 0; i < p.cPath[0] + 4; ++i){
 		this->cPath[i] = p.cPath[i];
 	}
-	for (int i = 0; i < p.cPath[0]-2; ++i){
+	for (int i = 0; i < p.cPath[0]; ++i){
 		this->cPathColor[i] = p.cPathColor[i];
 	}
 }

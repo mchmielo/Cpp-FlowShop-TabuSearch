@@ -1,7 +1,16 @@
 #include "tabu_search.h"
 #include <limits>
 #include <string>
+#include <iostream>
 
+
+#ifdef _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
+#define new DEBUG_NEW
+#endif
 tabu_search::tabu_search()
 {
 	bestCmax = std::numeric_limits<int>::max();
@@ -44,15 +53,18 @@ void tabu_search::preparePermutation(){
 	currPermutation.findAllPossibleSwaps(possibleSwaps);
 }
 
-void tabu_search::mainAlgorith(){
+void tabu_search::mainAlgorithm(){
 	std::pair<int, int> currPair, bestPair;
 	std::vector<std::pair<int, int> >::iterator iter;
+	bestCmax = std::numeric_limits<int>::max();
+	tabuList.assign(TABU_SIZE, std::make_pair(0, 0));
 	preparePermutation();
+	currPermutation.createHTMLFile(std::string("tmp.html"));
 	for (int i = 0; i < MAX_ITERATIONS; ++i){
 		bestPair = std::make_pair(0, 0);
 		int localCmax = std::numeric_limits<int>::max();
 //		currPermutation.createHTMLFile(std::string("tmp") + std::to_string(i) + std::string(".html"));
-//		currPermutation.createHTMLFile(std::string("tmp.html"));
+		
 		while (!possibleSwaps.empty()){			// sprawdzenie lokalnego cmaxu dla ka¿dego mozliwego ruchu
 			currPair = possibleSwaps.front();	// zdjecie pary z kolejki
 			possibleSwaps.pop();
