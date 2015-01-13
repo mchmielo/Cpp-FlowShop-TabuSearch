@@ -47,7 +47,7 @@ int main()
 
 	unsigned __int64 freq, counterStart, counterStop;	// zmienne do mierzenia czasu dzialania 
 	long double timer;
-	cout << "Liczba iteracji: " << MAX_ITERATIONS << ", rozmiar listy tabu: " << TABU_SIZE << endl << endl;
+	cout << "Rozmiar listy tabu: " << TABU_SIZE << endl << endl;
 	srand(static_cast<unsigned int>(time(NULL)));
 	vector<string> fileNames = readFileNames("Data/names.txt");
 	if (!fileNames.empty()){

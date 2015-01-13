@@ -1,5 +1,5 @@
 #include "tabu_search.h"
-#include <limits>
+#include <Windows.h>
 #include <string>
 #include <iostream>
 
@@ -13,8 +13,8 @@
 #endif
 tabu_search::tabu_search()
 {
-	bestCmax = std::numeric_limits<int>::max();
-	tabuList.assign(TABU_SIZE, std::make_pair(0, 0));
+	bestCmax = 2147483647;
+	tabuList.assign(TABU_SIZE, BlockedOperation(0, 0, 0));
 }
 
 
@@ -33,12 +33,10 @@ flow_shop &tabu_search::getBestPermutation(){
 	return bestPermutation;
 }
 
-bool tabu_search::onTabuList(const std::pair<int, int> &currPair){
-	std::pair<int, int> swappedPair;
-	swappedPair.first = currPair.second;
-	swappedPair.second = currPair.first;
+bool tabu_search::onTabuList(const BlockedOperation &currPair){
+	
 	for (unsigned int i = 0; i < tabuList.size(); ++i){
-		if (tabuList[i] == currPair || tabuList[i] == swappedPair)
+		if (tabuList[i].isEqual(currPair))
 			return true;
 	}
 	return false;
@@ -54,58 +52,66 @@ void tabu_search::preparePermutation(){
 }
 
 void tabu_search::mainAlgorithm(){
+	BlockedOperation bO1, bO2;
+	bool is2Machine = false;
 	std::pair<int, int> currPair, bestPair;
-	std::vector<std::pair<int, int> >::iterator iter;
-	bestCmax = std::numeric_limits<int>::max();
-	tabuList.assign(TABU_SIZE, std::make_pair(0, 0));
+	std::vector<BlockedOperation >::iterator iter;
+	bestCmax = 2147483647;
+	tabuList.assign(TABU_SIZE, BlockedOperation(0, 0, 0));
 	preparePermutation();
 	currPermutation.createHTMLFile(std::string("tmp.html"));
 	for (int i = 0; i < MAX_ITERATIONS; ++i){
 		bestPair = std::make_pair(0, 0);
-		int localCmax = std::numeric_limits<int>::max();
+		int localCmax = 2147483647;
 //		currPermutation.createHTMLFile(std::string("tmp") + std::to_string(i) + std::string(".html"));
-		
+		tmpPerm.copyPermutation(currPermutation);
 		while (!possibleSwaps.empty()){			// sprawdzenie lokalnego cmaxu dla ka¿dego mozliwego ruchu
+			is2Machine = false;
 			currPair = possibleSwaps.front();	// zdjecie pary z kolejki
 			possibleSwaps.pop();
-			if (!onTabuList(currPair)){					// jeœli nie ma zamiany w tablicy tabu
-				currPermutation.swapPosInPi(currPair.first, currPair.second);	// zamiana pozycji
-				currPermutation.makeLp();
-				currPermutation.createSchedule();								// obliczenie wszystkich ci
+			
+			
+			currPermutation.swapPosInPi(currPair.first, currPair.second);	// zamiana pozycji
+			currPermutation.makeBlockedOperationsFromPos(currPair, bO1, bO2);
+			
 
-				currPermutation.findMaxCi();
+			currPermutation.makeLp();
+			currPermutation.createSchedule();								// obliczenie wszystkich ci
+			currPermutation.findMaxCi();
+
+			if (!onTabuList(bO1) && !onTabuList(bO2)){					// jeœli nie ma zamiany w tablicy tabu
+				
 				if (localCmax >= currPermutation.getCmax()){						// zapamietanie najlepszego ruchu i cmaxu
 					localCmax = currPermutation.getCmax();
 					bestPair = currPair;
 				}
-				currPermutation.swapPosInPi(currPair.second, currPair.first);	// przywrócenie permutacji wstêpnej
-				currPermutation.makeLp();
-				currPermutation.createSchedule();								// obliczenie wszystkich ci
+				
 			}
 			else{
-				currPermutation.swapPosInPi(currPair.first, currPair.second);	// zamiana pozycji
-				currPermutation.makeLp();
-				currPermutation.createSchedule();								// obliczenie wszystkich ci
-
-				currPermutation.findMaxCi();
 				if (currPermutation.getCmax() < bestCmax){						// zapamietanie najlepszego ruchu i cmaxu
 					bestCmax = currPermutation.getCmax();
 					bestPermutation.copyPermutation(currPermutation);
 					localCmax = currPermutation.getCmax();
 					bestPair = currPair;
 				}
-				currPermutation.swapPosInPi(currPair.second, currPair.first);	// przywrócenie permutacji wstêpnej
-				currPermutation.makeLp();
-				currPermutation.createSchedule();								// obliczenie wszystkich ci
 			}
+			currPermutation.swapPosInPi(currPair.second, currPair.first);
+			currPermutation.revertChangesInPermutation(tmpPerm);
 
 		}
+		
 		currPermutation.swapPosInPi(bestPair.first, bestPair.second);
 		currPermutation.makeLp();
 		preparePermutation();
 		iter = tabuList.begin();
-		tabuList.insert(iter, bestPair);
-		if (tabuList.size() >= TABU_SIZE)
+		currPermutation.makeBlockedOperationsFromPos(bestPair, bO1, bO2);
+		
+		tabuList.insert(iter, bO1);
+		if (!bO2.isEqual(BlockedOperation(-1, -1, -1))){				// jeœli przenosimy na druga maszyne i bO2 tez jest istotne
+			iter = tabuList.begin();
+			tabuList.insert(iter, bO2);
+		}
+		while (tabuList.size() > TABU_SIZE)
 			tabuList.pop_back();
 		if (localCmax < bestCmax){
 			bestCmax = localCmax;

@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <queue>
+#include "BlockedOperation.h"
 
 #ifdef _DEBUG
 #define _CRTDBG_MAP_ALLOC
@@ -89,9 +90,10 @@ public:
 	void createBlocks();
 	void swapPosInPi(int from, int to);
 	int findMachine(int);
-	void findAllPossibleSwaps(std::queue<std::pair<int,int> > &);
+	void findAllPossibleSwaps(std::queue<std::pair<int, int> > &);
 	void swapBlocks();
 	void copyPermutation(const flow_shop&);
+	void revertChangesInPermutation(const flow_shop&);
 
 	int getCmax();
 	int getBlockSwaps();
@@ -99,5 +101,9 @@ public:
 	bool isInCPath(int);
 	int findFirstOperationOnMachine(int , int);
 	void createHTMLFile(const std::string &file = "result.html");
+	int Pi(int index);
+	int Ps(int index);
+
+	void makeBlockedOperationsFromPos(const std::pair<int, int> position, BlockedOperation &bO1, BlockedOperation &bO2);
 };
 

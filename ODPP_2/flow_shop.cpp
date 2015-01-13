@@ -5,6 +5,7 @@
 #include <math.h>
 #include <iomanip>
 
+
 #ifdef _DEBUG
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
@@ -435,11 +436,12 @@ int flow_shop::findMachine(int index){
 	return (workspaceNumber * 2);
 }
 
-void flow_shop::findAllPossibleSwaps(std::queue<pair<int, int> > &possibleSwaps){
+void flow_shop::findAllPossibleSwaps(std::queue<std::pair<int, int> > &possibleSwaps){
 	int machine = 0, prevMachine = -1, blockBegin = -1, blockEnd = -1;
+	BlockedOperation tmpBO;
 	int index, machineOnW = -1;
 	if (!possibleSwaps.empty()){			// czyszczenie kolejki
-		std::queue<pair<int, int> > empty;
+		std::queue<std::pair<int, int> > empty;
 		std::swap(possibleSwaps, empty);
 	}
 	for (int i = 0; i < cPath[0]; ++i){
@@ -524,6 +526,15 @@ void flow_shop::swapBlocks(){
 	makeLp();
 }
 
+void flow_shop::revertChangesInPermutation(const flow_shop &p){
+	for (int i = 0; i <= this->n; ++i){
+		this->lp[i] = p.lp[i];
+		this->ci[i] = p.ci[i];
+		this->ph[i] = p.ph[i];
+	}
+	this->cMax = p.cMax;
+}
+
 void flow_shop::copyPermutation(const flow_shop &p){
 	this->clearFlowShop();
 	
@@ -570,6 +581,32 @@ void flow_shop::copyPermutation(const flow_shop &p){
 	for (int i = 0; i < p.cPath[0]; ++i){
 		this->cPathColor[i] = p.cPathColor[i];
 	}
+}
+
+void flow_shop::makeBlockedOperationsFromPos(const std::pair<int, int> position, BlockedOperation &bO1, BlockedOperation &bO2){
+	int machine1 = findMachine(position.first);
+	int machine2 = findMachine(position.second);
+	if (machine1 != machine2){
+		bO1.makeBlockedOperation(pi[position.second], pi[position.second - 1], machine1);
+		bO1.makeBlockedOperation(pi[position.second], pi[position.second + 1], machine1);
+	}
+	else{
+		if (position.first > position.second){	// w lewo
+			bO1.makeBlockedOperation(pi[position.second], pi[position.second - 1], machine1);
+		}
+		else{		// w prawo
+			bO1.makeBlockedOperation(pi[position.second], pi[position.second + 1], machine1);
+		}
+		bO2.makeBlockedOperation(-1, -1, -1);
+	}
+}
+
+int flow_shop::Pi(int index){
+	return pi[index];
+}
+
+int flow_shop::Ps(int index){
+	return ps[index];
 }
 
 bool flow_shop::isInCPath(int index){
