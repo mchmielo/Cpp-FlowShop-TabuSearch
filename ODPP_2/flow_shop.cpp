@@ -587,15 +587,21 @@ void flow_shop::makeBlockedOperationsFromPos(const std::pair<int, int> position,
 	int machine1 = findMachine(position.first);
 	int machine2 = findMachine(position.second);
 	if (machine1 != machine2){
-		bO1.makeBlockedOperation(pi[position.second], pi[position.second - 1], machine1);
-		bO1.makeBlockedOperation(pi[position.second], pi[position.second + 1], machine1);
+		if (position.first < position.second){
+			bO1.makeBlockedOperation(pi[position.second - 1], pi[position.second], machine2);
+			bO2.makeBlockedOperation(pi[position.second], pi[position.second + 1], machine2);
+		}
+		else{
+			bO1.makeBlockedOperation(pi[position.second - 1], pi[position.second], machine1);
+			bO2.makeBlockedOperation(pi[position.second], pi[position.second + 1], machine1);
+		}
 	}
 	else{
 		if (position.first > position.second){	// w lewo
-			bO1.makeBlockedOperation(pi[position.second], pi[position.second - 1], machine1);
+			bO1.makeBlockedOperation(pi[position.second], pi[position.second + 1], machine1);
 		}
 		else{		// w prawo
-			bO1.makeBlockedOperation(pi[position.second], pi[position.second + 1], machine1);
+			bO1.makeBlockedOperation(pi[position.second - 1], pi[position.second], machine1);
 		}
 		bO2.makeBlockedOperation(-1, -1, -1);
 	}

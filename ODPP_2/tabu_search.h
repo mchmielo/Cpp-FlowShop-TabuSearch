@@ -11,8 +11,8 @@
 #define new DEBUG_NEW
 #endif
 
-#define MAX_ITERATIONS 500
-#define TABU_SIZE 12
+#define MAX_ITERATIONS 2000
+#define TABU_SIZE 15
 
 class tabu_search
 {

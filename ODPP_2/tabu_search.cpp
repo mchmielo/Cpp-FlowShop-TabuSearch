@@ -53,7 +53,6 @@ void tabu_search::preparePermutation(){
 
 void tabu_search::mainAlgorithm(){
 	BlockedOperation bO1, bO2;
-	bool is2Machine = false;
 	std::pair<int, int> currPair, bestPair;
 	std::vector<BlockedOperation >::iterator iter;
 	bestCmax = 2147483647;
@@ -66,7 +65,6 @@ void tabu_search::mainAlgorithm(){
 //		currPermutation.createHTMLFile(std::string("tmp") + std::to_string(i) + std::string(".html"));
 		tmpPerm.copyPermutation(currPermutation);
 		while (!possibleSwaps.empty()){			// sprawdzenie lokalnego cmaxu dla ka¿dego mozliwego ruchu
-			is2Machine = false;
 			currPair = possibleSwaps.front();	// zdjecie pary z kolejki
 			possibleSwaps.pop();
 			
